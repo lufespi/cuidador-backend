@@ -13,7 +13,7 @@ def get_connection():
     )
 
 def init_db():
-    """Cria as tabelas necessárias se não existirem"""
+    """Cria as tabelas necessárias se não existirem e faz migrações"""
     conn = get_connection()
     cursor = conn.cursor()
     
@@ -32,6 +32,31 @@ def init_db():
                 INDEX idx_email (email)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         """)
+        
+        # Migração: adiciona colunas que podem estar faltando em tabelas antigas
+        columns_to_add = [
+            ("nome", "VARCHAR(100)"),
+            ("telefone", "VARCHAR(20)"),
+            ("data_nascimento", "DATE"),
+            ("sexo", "VARCHAR(10)"),
+            ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+        ]
+        
+        for column_name, column_type in columns_to_add:
+            try:
+                cursor.execute(f"ALTER TABLE users ADD COLUMN {column_name} {column_type}")
+                print(f"✅ Coluna '{column_name}' adicionada à tabela users")
+            except Exception as e:
+                if "Duplicate column name" in str(e):
+                    pass  # Coluna já existe, tudo bem
+                else:
+                    print(f"⚠️  Aviso ao adicionar coluna '{column_name}': {e}")
+        
+        # Adiciona índice no email se não existir
+        try:
+            cursor.execute("ALTER TABLE users ADD INDEX idx_email (email)")
+        except Exception:
+            pass  # Índice já existe
         
         # Tabela de registros de dor
         cursor.execute("""
