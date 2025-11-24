@@ -27,9 +27,9 @@ def create_record():
     descricao = data.get('descricao')  # Aceita 'descricao' do frontend
     data_registro = data.get('data_registro')  # Aceita data customizada
     
-    # Validação
-    if not body_parts or not isinstance(body_parts, list):
-        return jsonify({'error': 'body_parts é obrigatório e deve ser uma lista'}), 400
+    # Validação - body_parts agora é opcional
+    if body_parts is not None and not isinstance(body_parts, list):
+        return jsonify({'error': 'body_parts deve ser uma lista'}), 400
     
     if not isinstance(intensidade, int) or intensidade < 0 or intensidade > 10:
         return jsonify({'error': 'intensidade deve ser um número entre 0 e 10'}), 400
@@ -37,7 +37,7 @@ def create_record():
     try:
         record = PainRecord.create(
             user_id=request.user_id,
-            body_parts=body_parts,
+            body_parts=body_parts if body_parts else [],
             intensidade=intensidade,
             descricao=descricao,
             data_registro=data_registro
