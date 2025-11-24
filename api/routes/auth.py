@@ -90,3 +90,31 @@ def login():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@auth_bp.route('/profile', methods=['GET'])
+def get_profile():
+    """Retorna o perfil do usuário autenticado"""
+    from api.middleware.auth import require_auth
+    from flask import g
+    
+    # Verifica autenticação
+    auth_result = require_auth()
+    if auth_result:  # Se retornou algo, é um erro
+        return auth_result
+    
+    try:
+        # Busca usuário pelo ID do token
+        user = User.find_by_id(g.user_id)
+        
+        if not user:
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+        
+        # Remove password_hash da resposta
+        if 'password_hash' in user:
+            del user['password_hash']
+        
+        return jsonify({'user': user}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

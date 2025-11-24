@@ -33,7 +33,7 @@ def init_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         """)
         
-        # Migração: adiciona colunas que podem estar faltando em tabelas antigas
+        # Migração: adiciona colunas novas se não existirem
         columns_to_add = [
             ("nome", "VARCHAR(100)"),
             ("telefone", "VARCHAR(20)"),
@@ -51,6 +51,67 @@ def init_db():
                     pass  # Coluna já existe, tudo bem
                 else:
                     print(f"⚠️  Aviso ao adicionar coluna '{column_name}': {e}")
+        
+        # Migração: copia dados das colunas antigas (inglês) para novas (português) se existirem
+        old_to_new_columns = [
+            ("first_name", "nome"),
+            ("last_name", "nome"),  # Concatena com nome
+            ("phone", "telefone"),
+            ("birth_date", "data_nascimento"),
+            ("gender", "sexo"),
+        ]
+        
+        # Verifica se colunas antigas existem
+        cursor.execute("SHOW COLUMNS FROM users")
+        existing_columns = {col['Field'] for col in cursor.fetchall()}
+        
+        # Migra dados se colunas antigas existirem
+        if 'first_name' in existing_columns or 'last_name' in existing_columns:
+            print("🔄 Migrando dados das colunas antigas...")
+            
+            # Migra nome (concatena first_name + last_name)
+            if 'first_name' in existing_columns:
+                cursor.execute("""
+                    UPDATE users 
+                    SET nome = CASE 
+                        WHEN first_name IS NOT NULL AND last_name IS NOT NULL 
+                            THEN CONCAT(first_name, ' ', last_name)
+                        WHEN first_name IS NOT NULL 
+                            THEN first_name
+                        WHEN last_name IS NOT NULL 
+                            THEN last_name
+                        ELSE nome
+                    END
+                    WHERE nome IS NULL OR nome = ''
+                """)
+                print("✅ Dados de 'first_name' e 'last_name' migrados para 'nome'")
+            
+            # Migra telefone
+            if 'phone' in existing_columns:
+                cursor.execute("UPDATE users SET telefone = phone WHERE telefone IS NULL AND phone IS NOT NULL")
+                print("✅ Dados de 'phone' migrados para 'telefone'")
+            
+            # Migra data de nascimento
+            if 'birth_date' in existing_columns:
+                cursor.execute("UPDATE users SET data_nascimento = birth_date WHERE data_nascimento IS NULL AND birth_date IS NOT NULL")
+                print("✅ Dados de 'birth_date' migrados para 'data_nascimento'")
+            
+            # Migra gênero
+            if 'gender' in existing_columns:
+                cursor.execute("UPDATE users SET sexo = gender WHERE sexo IS NULL AND gender IS NOT NULL")
+                print("✅ Dados de 'gender' migrados para 'sexo'")
+            
+            conn.commit()
+            
+            # Remove colunas antigas
+            print("🗑️  Removendo colunas antigas...")
+            for old_col in ['first_name', 'last_name', 'phone', 'birth_date', 'gender', 'updated_at']:
+                if old_col in existing_columns:
+                    try:
+                        cursor.execute(f"ALTER TABLE users DROP COLUMN {old_col}")
+                        print(f"✅ Coluna antiga '{old_col}' removida")
+                    except Exception as e:
+                        print(f"⚠️  Aviso ao remover coluna '{old_col}': {e}")
         
         # Adiciona índice no email se não existir
         try:
