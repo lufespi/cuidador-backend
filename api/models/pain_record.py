@@ -5,58 +5,55 @@ from api.db import get_connection
 class PainRecord:
     @staticmethod
     def create(user_id, body_parts, intensidade, descricao=None, data_registro=None):
-        """Cria um novo registro de dor"""
+        """Cria um novo registro de dor - compatível com schema existente"""
         conn = get_connection()
         cursor = conn.cursor()
         
         try:
-            # Se data_registro foi fornecida, converte string ISO para datetime
+            # Converte data se necessário
             if data_registro and isinstance(data_registro, str):
                 data_registro = datetime.fromisoformat(data_registro.replace('Z', '+00:00'))
             
-            # Verifica quais colunas existem na tabela
-            cursor.execute("SHOW COLUMNS FROM pain_records")
-            columns = {col['Field'] for col in cursor.fetchall()}
-            
-            # Converte lista para JSON string
+            # Converte lista de body_parts para JSON string
             body_parts_json = json.dumps(body_parts)
-            data_value = data_registro or datetime.now()
             
-            # Monta SQL baseado nas colunas disponíveis
-            if 'descricao' in columns and 'data_registro' in columns:
-                # Schema novo
-                sql = """
-                    INSERT INTO pain_records (user_id, body_parts, intensidade, descricao, data_registro)
-                    VALUES (%s, %s, %s, %s, %s)
-                """
-                cursor.execute(sql, (user_id, body_parts_json, intensidade, descricao, data_value))
-            else:
-                # Schema antigo (compatibilidade)
-                sql = """
-                    INSERT INTO pain_records (user_id, body_parts, intensidade, observacoes, data)
-                    VALUES (%s, %s, %s, %s, %s)
-                """
-                cursor.execute(sql, (user_id, body_parts_json, intensidade, descricao, data_value))
+            # Usa as colunas que existem na tabela atual
+            sql = """
+                INSERT INTO pain_records 
+                (user_id, body_parts, intensity, description, timestamp)
+                VALUES (%s, %s, %s, %s, %s)
+            """
             
+            cursor.execute(sql, (
+                user_id,
+                body_parts_json,
+                intensidade,
+                descricao or '',
+                data_registro or datetime.now()
+            ))
             conn.commit()
             
             record_id = cursor.lastrowid
             
-            # Busca e retorna o registro completo criado
+            # Busca o registro criado
             cursor.execute("SELECT * FROM pain_records WHERE id = %s", (record_id,))
             record = cursor.fetchone()
             
+            # Normaliza resposta para formato esperado pelo frontend
             if record:
-                # Normaliza nomes das colunas para o padrão novo
-                if 'observacoes' in record and 'descricao' not in record:
-                    record['descricao'] = record.pop('observacoes')
-                if 'data' in record and 'data_registro' not in record:
-                    record['data_registro'] = record.pop('data')
-                
-                if 'body_parts' in record and isinstance(record['body_parts'], str):
-                    record['body_parts'] = json.loads(record['body_parts'])
+                normalized = {
+                    'id': str(record.get('id')),
+                    'user_id': str(record.get('user_id')),
+                    'body_parts': json.loads(record.get('body_parts', '[]')) if isinstance(record.get('body_parts'), str) else (record.get('body_parts') or []),
+                    'intensidade': record.get('intensity', 0),
+                    'descricao': record.get('description') or record.get('descricao'),
+                    'data_registro': record.get('timestamp') or record.get('created_at'),
+                    'created_at': record.get('created_at'),
+                    'updated_at': record.get('updated_at')
+                }
+                return normalized
             
-            return record
+            return None
             
         finally:
             cursor.close()
@@ -64,49 +61,45 @@ class PainRecord:
     
     @staticmethod
     def find_by_user(user_id, start_date=None, end_date=None, limit=50):
-        """Busca registros de dor de um usuário com filtros opcionais"""
+        """Busca registros de dor de um usuário"""
         conn = get_connection()
         cursor = conn.cursor()
         
         try:
-            # Verifica quais colunas existem
-            cursor.execute("SHOW COLUMNS FROM pain_records")
-            columns = {col['Field'] for col in cursor.fetchall()}
-            
-            # Usa nome correto da coluna de data
-            date_column = 'data_registro' if 'data_registro' in columns else 'data'
-            
-            # Monta query com filtros dinâmicos
-            sql = f"SELECT * FROM pain_records WHERE user_id = %s"
+            # Monta query usando as colunas existentes
+            sql = "SELECT * FROM pain_records WHERE user_id = %s"
             params = [user_id]
             
             if start_date:
-                sql += f" AND {date_column} >= %s"
+                sql += " AND timestamp >= %s"
                 params.append(start_date)
             
             if end_date:
-                sql += f" AND {date_column} <= %s"
+                sql += " AND timestamp <= %s"
                 params.append(end_date)
             
-            sql += f" ORDER BY {date_column} DESC LIMIT %s"
+            sql += " ORDER BY timestamp DESC LIMIT %s"
             params.append(limit)
             
             cursor.execute(sql, tuple(params))
             records = cursor.fetchall()
             
-            # Normaliza nomes das colunas e converte JSON
+            # Normaliza todos os registros para formato do frontend
+            normalized_records = []
             for record in records:
-                # Normaliza nomes
-                if 'observacoes' in record and 'descricao' not in record:
-                    record['descricao'] = record.pop('observacoes')
-                if 'data' in record and 'data_registro' not in record:
-                    record['data_registro'] = record.pop('data')
-                
-                # Converte JSON
-                if 'body_parts' in record and isinstance(record['body_parts'], str):
-                    record['body_parts'] = json.loads(record['body_parts'])
+                normalized = {
+                    'id': str(record.get('id')),
+                    'user_id': str(record.get('user_id')),
+                    'body_parts': json.loads(record.get('body_parts', '[]')) if isinstance(record.get('body_parts'), str) else (record.get('body_parts') or []),
+                    'intensidade': record.get('intensity', 0),
+                    'descricao': record.get('description') or record.get('descricao') or 'Sem descrição',
+                    'data_registro': record.get('timestamp') or record.get('created_at'),
+                    'created_at': record.get('created_at'),
+                    'updated_at': record.get('updated_at')
+                }
+                normalized_records.append(normalized)
             
-            return records
+            return normalized_records
             
         finally:
             cursor.close()
@@ -114,7 +107,7 @@ class PainRecord:
     
     @staticmethod
     def find_by_id(record_id, user_id):
-        """Busca um registro específico por ID (validando que pertence ao usuário)"""
+        """Busca um registro específico por ID"""
         conn = get_connection()
         cursor = conn.cursor()
         
@@ -124,17 +117,20 @@ class PainRecord:
             record = cursor.fetchone()
             
             if record:
-                # Normaliza nomes das colunas
-                if 'observacoes' in record and 'descricao' not in record:
-                    record['descricao'] = record.pop('observacoes')
-                if 'data' in record and 'data_registro' not in record:
-                    record['data_registro'] = record.pop('data')
-                
-                # Converte JSON
-                if 'body_parts' in record and isinstance(record['body_parts'], str):
-                    record['body_parts'] = json.loads(record['body_parts'])
+                # Normaliza para formato do frontend
+                normalized = {
+                    'id': str(record.get('id')),
+                    'user_id': str(record.get('user_id')),
+                    'body_parts': json.loads(record.get('body_parts', '[]')) if isinstance(record.get('body_parts'), str) else (record.get('body_parts') or []),
+                    'intensidade': record.get('intensity', 0),
+                    'descricao': record.get('description') or record.get('descricao') or 'Sem descrição',
+                    'data_registro': record.get('timestamp') or record.get('created_at'),
+                    'created_at': record.get('created_at'),
+                    'updated_at': record.get('updated_at')
+                }
+                return normalized
             
-            return record
+            return None
             
         finally:
             cursor.close()
@@ -156,3 +152,4 @@ class PainRecord:
         finally:
             cursor.close()
             conn.close()
+
