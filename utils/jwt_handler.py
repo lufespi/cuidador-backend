@@ -1,13 +1,14 @@
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from config.settings import Config
 
 def generate_token(user_id):
     """Gera um token JWT para o usuário"""
+    now = datetime.now(timezone.utc)
     payload = {
         'user_id': user_id,
-        'exp': datetime.utcnow() + timedelta(seconds=Config.JWT_EXPIRATION),
-        'iat': datetime.utcnow()
+        'exp': now + timedelta(seconds=Config.JWT_EXPIRATION),
+        'iat': now
     }
     return jwt.encode(payload, Config.JWT_SECRET, algorithm='HS256')
 
