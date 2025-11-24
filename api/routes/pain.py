@@ -1,8 +1,20 @@
 from flask import Blueprint, request, jsonify
 from api.models.pain_record import PainRecord
 from api.middleware.auth import token_required
+from datetime import datetime
 
 pain_bp = Blueprint('pain', __name__)
+
+def serialize_dates(record):
+    """Converte todos os campos datetime para string ISO"""
+    if not record:
+        return record
+    
+    for key, value in record.items():
+        if isinstance(value, datetime):
+            record[key] = value.isoformat()
+    
+    return record
 
 @pain_bp.route('/records', methods=['POST'])
 @token_required
@@ -31,7 +43,7 @@ def create_record():
             data_registro=data_registro
         )
         
-        return jsonify(record), 201
+        return jsonify(serialize_dates(record)), 201
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -55,15 +67,9 @@ def get_records():
         )
         
         # Converte datetime para string ISO
-        for record in records:
-            if 'data_registro' in record:
-                record['data_registro'] = record['data_registro'].isoformat()
-            if 'created_at' in record:
-                record['created_at'] = record['created_at'].isoformat()
-            if 'updated_at' in record and record['updated_at']:
-                record['updated_at'] = record['updated_at'].isoformat()
+        serialized_records = [serialize_dates(record) for record in records]
         
-        return jsonify({'records': records}), 200
+        return jsonify({'records': serialized_records}), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -77,15 +83,7 @@ def get_record(record_id):
         record = PainRecord.find_by_id(record_id, request.user_id)
         
         if record:
-            # Converte datetime para string ISO
-            if 'data_registro' in record:
-                record['data_registro'] = record['data_registro'].isoformat()
-            if 'created_at' in record:
-                record['created_at'] = record['created_at'].isoformat()
-            if 'updated_at' in record and record['updated_at']:
-                record['updated_at'] = record['updated_at'].isoformat()
-            
-            return jsonify(record), 200
+            return jsonify(serialize_dates(record)), 200
         else:
             return jsonify({'error': 'Registro não encontrado'}), 404
             
