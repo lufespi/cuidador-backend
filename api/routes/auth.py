@@ -147,3 +147,54 @@ def get_profile():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@auth_bp.route('/profile', methods=['PUT'])
+def update_profile():
+    """Atualiza o perfil do usuário autenticado"""
+    from api.middleware.auth import require_auth
+    from flask import g
+    from datetime import date, datetime
+    
+    # Verifica autenticação
+    auth_result = require_auth()
+    if auth_result:
+        return auth_result
+    
+    data = request.get_json()
+    
+    try:
+        # Atualiza dados do usuário
+        User.update(
+            user_id=g.user_id,
+            nome=data.get('nome'),
+            telefone=data.get('telefone'),
+            data_nascimento=data.get('data_nascimento'),
+            sexo=data.get('sexo')
+        )
+        
+        # Busca usuário atualizado
+        user = User.find_by_id(g.user_id)
+        
+        if not user:
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+        
+        # Remove password_hash da resposta
+        if 'password_hash' in user:
+            del user['password_hash']
+        
+        # Converte datas para formato ISO
+        for key, value in user.items():
+            if isinstance(value, (date, datetime)):
+                if value.year > 1900:
+                    user[key] = value.isoformat()
+                else:
+                    user[key] = None
+        
+        return jsonify({
+            'message': 'Perfil atualizado com sucesso',
+            'user': user
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

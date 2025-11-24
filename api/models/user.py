@@ -65,3 +65,44 @@ class User:
             password.encode('utf-8'),
             password_hash.encode('utf-8')
         )
+    
+    @staticmethod
+    def update(user_id, nome=None, telefone=None, data_nascimento=None, sexo=None):
+        """Atualiza dados do usuário"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Monta query dinamicamente apenas com campos fornecidos
+            updates = []
+            values = []
+            
+            if nome is not None:
+                updates.append("nome = %s")
+                values.append(nome)
+            
+            if telefone is not None:
+                updates.append("telefone = %s")
+                values.append(telefone)
+            
+            if data_nascimento is not None:
+                updates.append("data_nascimento = %s")
+                values.append(data_nascimento)
+            
+            if sexo is not None:
+                updates.append("sexo = %s")
+                values.append(sexo)
+            
+            if not updates:
+                return True  # Nada para atualizar
+            
+            values.append(user_id)
+            sql = f"UPDATE users SET {', '.join(updates)} WHERE id = %s"
+            cursor.execute(sql, tuple(values))
+            conn.commit()
+            
+            return True
+            
+        finally:
+            cursor.close()
+            conn.close()
