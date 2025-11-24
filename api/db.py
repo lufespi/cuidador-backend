@@ -130,14 +130,46 @@ def init_db():
                 user_id INT NOT NULL,
                 body_parts JSON NOT NULL,
                 intensidade INT NOT NULL,
-                data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                observacoes TEXT,
+                descricao TEXT,
+                data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                 INDEX idx_user_id (user_id),
-                INDEX idx_data (data)
+                INDEX idx_data_registro (data_registro)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         """)
         
+        # Migração: renomeia 'observacoes' para 'descricao' se necessário
+        try:
+            cursor.execute("SHOW COLUMNS FROM pain_records")
+            pain_columns = {col['Field'] for col in cursor.fetchall()}
+            
+            if 'observacoes' in pain_columns and 'descricao' not in pain_columns:
+                cursor.execute("ALTER TABLE pain_records CHANGE observacoes descricao TEXT")
+                print("✅ Coluna 'observacoes' renomeada para 'descricao'")
+            
+            # Adiciona coluna 'descricao' se não existir (para tabelas antigas)
+            if 'descricao' not in pain_columns and 'observacoes' not in pain_columns:
+                cursor.execute("ALTER TABLE pain_records ADD COLUMN descricao TEXT")
+                print("✅ Coluna 'descricao' adicionada")
+            
+            # Renomeia 'data' para 'data_registro' se necessário
+            if 'data' in pain_columns and 'data_registro' not in pain_columns:
+                cursor.execute("ALTER TABLE pain_records CHANGE data data_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+                print("✅ Coluna 'data' renomeada para 'data_registro'")
+            
+            # Adiciona timestamps se não existirem
+            if 'created_at' not in pain_columns:
+                cursor.execute("ALTER TABLE pain_records ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+                print("✅ Coluna 'created_at' adicionada")
+            
+            if 'updated_at' not in pain_columns:
+                cursor.execute("ALTER TABLE pain_records ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+                print("✅ Coluna 'updated_at' adicionada")
+                
+        except Exception as e:
+            print(f"⚠️ Aviso ao migrar tabela pain_records: {e}")
         conn.commit()
         print("✅ Tabelas criadas/verificadas com sucesso!")
         

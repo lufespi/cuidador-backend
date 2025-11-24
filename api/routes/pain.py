@@ -12,7 +12,8 @@ def create_record():
     
     body_parts = data.get('body_parts', [])
     intensidade = data.get('intensidade', 0)
-    observacoes = data.get('observacoes')
+    descricao = data.get('descricao')  # Aceita 'descricao' do frontend
+    data_registro = data.get('data_registro')  # Aceita data customizada
     
     # Validação
     if not body_parts or not isinstance(body_parts, list):
@@ -22,17 +23,15 @@ def create_record():
         return jsonify({'error': 'intensidade deve ser um número entre 0 e 10'}), 400
     
     try:
-        record_id = PainRecord.create(
+        record = PainRecord.create(
             user_id=request.user_id,
             body_parts=body_parts,
             intensidade=intensidade,
-            observacoes=observacoes
+            descricao=descricao,
+            data_registro=data_registro
         )
         
-        return jsonify({
-            'message': 'Registro criado com sucesso',
-            'id': record_id
-        }), 201
+        return jsonify(record), 201
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -43,15 +42,53 @@ def create_record():
 def get_records():
     """Lista registros de dor do usuário"""
     try:
-        records = PainRecord.find_by_user(request.user_id)
+        # Parâmetros de filtro
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        limit = request.args.get('limit', 50, type=int)
         
-        # Converte datetime para string
+        records = PainRecord.find_by_user(
+            user_id=request.user_id,
+            start_date=start_date,
+            end_date=end_date,
+            limit=limit
+        )
+        
+        # Converte datetime para string ISO
         for record in records:
-            if 'data' in record:
-                record['data'] = record['data'].isoformat()
+            if 'data_registro' in record:
+                record['data_registro'] = record['data_registro'].isoformat()
+            if 'created_at' in record:
+                record['created_at'] = record['created_at'].isoformat()
+            if 'updated_at' in record and record['updated_at']:
+                record['updated_at'] = record['updated_at'].isoformat()
         
-        return jsonify(records), 200
+        return jsonify({'records': records}), 200
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@pain_bp.route('/records/<int:record_id>', methods=['GET'])
+@token_required
+def get_record(record_id):
+    """Busca um registro específico de dor"""
+    try:
+        record = PainRecord.find_by_id(record_id, request.user_id)
+        
+        if record:
+            # Converte datetime para string ISO
+            if 'data_registro' in record:
+                record['data_registro'] = record['data_registro'].isoformat()
+            if 'created_at' in record:
+                record['created_at'] = record['created_at'].isoformat()
+            if 'updated_at' in record and record['updated_at']:
+                record['updated_at'] = record['updated_at'].isoformat()
+            
+            return jsonify(record), 200
+        else:
+            return jsonify({'error': 'Registro não encontrado'}), 404
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
