@@ -14,19 +14,30 @@ class PainRecord:
             if data_registro and isinstance(data_registro, str):
                 data_registro = datetime.fromisoformat(data_registro.replace('Z', '+00:00'))
             
-            sql = """
-                INSERT INTO pain_records (user_id, body_parts, intensidade, descricao, data_registro)
-                VALUES (%s, %s, %s, %s, %s)
-            """
+            # Verifica quais colunas existem na tabela
+            cursor.execute("SHOW COLUMNS FROM pain_records")
+            columns = {col['Field'] for col in cursor.fetchall()}
+            
             # Converte lista para JSON string
             body_parts_json = json.dumps(body_parts)
-            cursor.execute(sql, (
-                user_id, 
-                body_parts_json, 
-                intensidade, 
-                descricao,
-                data_registro or datetime.now()
-            ))
+            data_value = data_registro or datetime.now()
+            
+            # Monta SQL baseado nas colunas disponíveis
+            if 'descricao' in columns and 'data_registro' in columns:
+                # Schema novo
+                sql = """
+                    INSERT INTO pain_records (user_id, body_parts, intensidade, descricao, data_registro)
+                    VALUES (%s, %s, %s, %s, %s)
+                """
+                cursor.execute(sql, (user_id, body_parts_json, intensidade, descricao, data_value))
+            else:
+                # Schema antigo (compatibilidade)
+                sql = """
+                    INSERT INTO pain_records (user_id, body_parts, intensidade, observacoes, data)
+                    VALUES (%s, %s, %s, %s, %s)
+                """
+                cursor.execute(sql, (user_id, body_parts_json, intensidade, descricao, data_value))
+            
             conn.commit()
             
             record_id = cursor.lastrowid
@@ -35,8 +46,15 @@ class PainRecord:
             cursor.execute("SELECT * FROM pain_records WHERE id = %s", (record_id,))
             record = cursor.fetchone()
             
-            if record and 'body_parts' in record:
-                record['body_parts'] = json.loads(record['body_parts'])
+            if record:
+                # Normaliza nomes das colunas para o padrão novo
+                if 'observacoes' in record and 'descricao' not in record:
+                    record['descricao'] = record.pop('observacoes')
+                if 'data' in record and 'data_registro' not in record:
+                    record['data_registro'] = record.pop('data')
+                
+                if 'body_parts' in record and isinstance(record['body_parts'], str):
+                    record['body_parts'] = json.loads(record['body_parts'])
             
             return record
             
@@ -51,26 +69,40 @@ class PainRecord:
         cursor = conn.cursor()
         
         try:
+            # Verifica quais colunas existem
+            cursor.execute("SHOW COLUMNS FROM pain_records")
+            columns = {col['Field'] for col in cursor.fetchall()}
+            
+            # Usa nome correto da coluna de data
+            date_column = 'data_registro' if 'data_registro' in columns else 'data'
+            
             # Monta query com filtros dinâmicos
-            sql = "SELECT * FROM pain_records WHERE user_id = %s"
+            sql = f"SELECT * FROM pain_records WHERE user_id = %s"
             params = [user_id]
             
             if start_date:
-                sql += " AND data_registro >= %s"
+                sql += f" AND {date_column} >= %s"
                 params.append(start_date)
             
             if end_date:
-                sql += " AND data_registro <= %s"
+                sql += f" AND {date_column} <= %s"
                 params.append(end_date)
             
-            sql += " ORDER BY data_registro DESC LIMIT %s"
+            sql += f" ORDER BY {date_column} DESC LIMIT %s"
             params.append(limit)
             
             cursor.execute(sql, tuple(params))
             records = cursor.fetchall()
             
-            # Converte JSON string de volta para lista
+            # Normaliza nomes das colunas e converte JSON
             for record in records:
+                # Normaliza nomes
+                if 'observacoes' in record and 'descricao' not in record:
+                    record['descricao'] = record.pop('observacoes')
+                if 'data' in record and 'data_registro' not in record:
+                    record['data_registro'] = record.pop('data')
+                
+                # Converte JSON
                 if 'body_parts' in record and isinstance(record['body_parts'], str):
                     record['body_parts'] = json.loads(record['body_parts'])
             
@@ -91,8 +123,16 @@ class PainRecord:
             cursor.execute(sql, (record_id, user_id))
             record = cursor.fetchone()
             
-            if record and 'body_parts' in record and isinstance(record['body_parts'], str):
-                record['body_parts'] = json.loads(record['body_parts'])
+            if record:
+                # Normaliza nomes das colunas
+                if 'observacoes' in record and 'descricao' not in record:
+                    record['descricao'] = record.pop('observacoes')
+                if 'data' in record and 'data_registro' not in record:
+                    record['data_registro'] = record.pop('data')
+                
+                # Converte JSON
+                if 'body_parts' in record and isinstance(record['body_parts'], str):
+                    record['body_parts'] = json.loads(record['body_parts'])
             
             return record
             

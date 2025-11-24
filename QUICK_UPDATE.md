@@ -12,13 +12,16 @@ cd ~/cuidador-backend
 git pull origin main
 ```
 
-### 3️⃣ **Recarregue a Aplicação**
+### 3️⃣ **Execute as Migrações do Banco**
+```bash
+python3 -c "from api.db import init_db; init_db()"
+```
+
+### 4️⃣ **Recarregue a Aplicação**
 - Vá para a aba **"Web"**
 - Clique no botão verde **"Reload lufespi.pythonanywhere.com"**
 
 ### ✅ **Pronto!**
-
-As migrações serão aplicadas automaticamente quando a aplicação iniciar.
 
 ---
 
