@@ -145,6 +145,11 @@ def init_db():
             cursor.execute("SHOW COLUMNS FROM pain_records")
             pain_columns = {col['Field'] for col in cursor.fetchall()}
             
+            # Adiciona body_parts se não existir
+            if 'body_parts' not in pain_columns:
+                cursor.execute("ALTER TABLE pain_records ADD COLUMN body_parts JSON NOT NULL AFTER user_id")
+                print("✅ Coluna 'body_parts' adicionada")
+            
             if 'observacoes' in pain_columns and 'descricao' not in pain_columns:
                 cursor.execute("ALTER TABLE pain_records CHANGE observacoes descricao TEXT")
                 print("✅ Coluna 'observacoes' renomeada para 'descricao'")

@@ -1,5 +1,20 @@
 # 🚀 Guia Rápido de Atualização
 
+## ⚠️ CORREÇÃO DE EMERGÊNCIA - Coluna body_parts Ausente
+
+Se você está vendo o erro: **"Unknown column 'body_parts'"**
+
+### Execute ESTE comando no console do PythonAnywhere:
+
+```bash
+cd ~/cuidador-backend
+python3 fix_body_parts.py
+```
+
+Isso vai adicionar a coluna faltante automaticamente.
+
+---
+
 ## Para Atualizar o Backend no PythonAnywhere
 
 ### 1️⃣ **Acesse o Console do PythonAnywhere**
@@ -12,12 +27,17 @@ cd ~/cuidador-backend
 git pull origin main
 ```
 
-### 3️⃣ **Execute as Migrações do Banco**
+### 3️⃣ **Execute o Script de Correção**
+```bash
+python3 fix_body_parts.py
+```
+
+### 4️⃣ **Execute as Migrações do Banco**
 ```bash
 python3 -c "from api.db import init_db; init_db()"
 ```
 
-### 4️⃣ **Recarregue a Aplicação**
+### 5️⃣ **Recarregue a Aplicação**
 - Vá para a aba **"Web"**
 - Clique no botão verde **"Reload lufespi.pythonanywhere.com"**
 
