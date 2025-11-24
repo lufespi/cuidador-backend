@@ -238,3 +238,31 @@ def change_password():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@auth_bp.route('/reset-password', methods=['POST'])
+def reset_password():
+    """Reseta a senha do usuário (esqueci minha senha)"""
+    data = request.get_json()
+    
+    email = data.get('email')
+    new_password = data.get('nova_senha')
+    
+    # Validação
+    if not email or not new_password:
+        return jsonify({'error': 'Email e nova senha são obrigatórios'}), 400
+    
+    if len(new_password) < 6:
+        return jsonify({'error': 'Nova senha deve ter pelo menos 6 caracteres'}), 400
+    
+    try:
+        # Reseta senha
+        success, message = User.reset_password(email, new_password)
+        
+        if not success:
+            return jsonify({'error': message}), 404
+        
+        return jsonify({'message': message}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

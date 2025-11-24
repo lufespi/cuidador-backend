@@ -150,3 +150,35 @@ class User:
         finally:
             cursor.close()
             conn.close()
+    
+    @staticmethod
+    def reset_password(email, new_password):
+        """Reseta a senha do usuário pelo email"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Verifica se usuário existe
+            sql = "SELECT id FROM users WHERE email = %s"
+            cursor.execute(sql, (email,))
+            user = cursor.fetchone()
+            
+            if not user:
+                return False, "Email não encontrado"
+            
+            # Hash da nova senha
+            new_password_hash = bcrypt.hashpw(
+                new_password.encode('utf-8'),
+                bcrypt.gensalt()
+            ).decode('utf-8')
+            
+            # Atualiza senha
+            sql = "UPDATE users SET password_hash = %s WHERE email = %s"
+            cursor.execute(sql, (new_password_hash, email))
+            conn.commit()
+            
+            return True, "Senha redefinida com sucesso"
+            
+        finally:
+            cursor.close()
+            conn.close()
