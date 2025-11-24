@@ -105,3 +105,36 @@ def delete_record(record_id):
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@pain_bp.route('/records/<int:record_id>', methods=['PUT', 'PATCH'])
+@token_required
+def update_record(record_id):
+    """Atualiza um registro de dor"""
+    data = request.get_json()
+    
+    intensidade = data.get('intensidade')
+    descricao = data.get('descricao')
+    data_registro = data.get('data_registro')
+    
+    # Validação de intensidade se fornecida
+    if intensidade is not None:
+        if not isinstance(intensidade, int) or intensidade < 0 or intensidade > 10:
+            return jsonify({'error': 'intensidade deve ser um número entre 0 e 10'}), 400
+    
+    try:
+        record = PainRecord.update(
+            record_id=record_id,
+            user_id=request.user_id,
+            intensidade=intensidade,
+            descricao=descricao,
+            data_registro=data_registro
+        )
+        
+        if record:
+            return jsonify(serialize_dates(record)), 200
+        else:
+            return jsonify({'error': 'Registro não encontrado'}), 404
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
