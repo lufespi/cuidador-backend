@@ -42,6 +42,16 @@ def register():
         if user and 'password_hash' in user:
             del user['password_hash']
         
+        # Converte datas para formato ISO
+        if user:
+            from datetime import date, datetime
+            for key, value in user.items():
+                if isinstance(value, (date, datetime)):
+                    if value.year > 1900:
+                        user[key] = value.isoformat()
+                    else:
+                        user[key] = None
+        
         return jsonify({
             'message': 'Usuário cadastrado com sucesso',
             'token': token,
@@ -82,6 +92,15 @@ def login():
         if 'password_hash' in user:
             del user['password_hash']
         
+        # Converte datas para formato ISO
+        from datetime import date, datetime
+        for key, value in user.items():
+            if isinstance(value, (date, datetime)):
+                if value.year > 1900:
+                    user[key] = value.isoformat()
+                else:
+                    user[key] = None
+        
         return jsonify({
             'message': 'Login realizado com sucesso',
             'token': token,
@@ -97,6 +116,7 @@ def get_profile():
     """Retorna o perfil do usuário autenticado"""
     from api.middleware.auth import require_auth
     from flask import g
+    from datetime import date, datetime
     
     # Verifica autenticação
     auth_result = require_auth()
@@ -113,6 +133,15 @@ def get_profile():
         # Remove password_hash da resposta
         if 'password_hash' in user:
             del user['password_hash']
+        
+        # Converte datas para formato ISO string
+        for key, value in user.items():
+            if isinstance(value, (date, datetime)):
+                # Ignora datas inválidas (0000-00-00)
+                if value.year > 1900:
+                    user[key] = value.isoformat()
+                else:
+                    user[key] = None
         
         return jsonify({'user': user}), 200
         
