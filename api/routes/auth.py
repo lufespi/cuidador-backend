@@ -29,7 +29,9 @@ def register():
             nome=data.get('nome'),
             telefone=data.get('telefone'),
             data_nascimento=data.get('data_nascimento'),
-            sexo=data.get('sexo')
+            sexo=data.get('sexo'),
+            diagnostico=data.get('diagnostico'),
+            comorbidades=data.get('comorbidades')
         )
         
         # Gera token
@@ -170,7 +172,9 @@ def update_profile():
             nome=data.get('nome'),
             telefone=data.get('telefone'),
             data_nascimento=data.get('data_nascimento'),
-            sexo=data.get('sexo')
+            sexo=data.get('sexo'),
+            diagnostico=data.get('diagnostico'),
+            comorbidades=data.get('comorbidades')
         )
         
         # Busca usuário atualizado
@@ -195,6 +199,42 @@ def update_profile():
             'message': 'Perfil atualizado com sucesso',
             'user': user
         }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@auth_bp.route('/password', methods=['PUT'])
+def change_password():
+    """Altera a senha do usuário autenticado"""
+    from api.middleware.auth import require_auth
+    from flask import g
+    
+    # Verifica autenticação
+    auth_result = require_auth()
+    if auth_result:
+        return auth_result
+    
+    data = request.get_json()
+    
+    current_password = data.get('senha_atual')
+    new_password = data.get('nova_senha')
+    
+    # Validação
+    if not current_password or not new_password:
+        return jsonify({'error': 'Senha atual e nova senha são obrigatórias'}), 400
+    
+    if len(new_password) < 6:
+        return jsonify({'error': 'Nova senha deve ter pelo menos 6 caracteres'}), 400
+    
+    try:
+        # Altera senha
+        success, message = User.change_password(g.user_id, current_password, new_password)
+        
+        if not success:
+            return jsonify({'error': message}), 401
+        
+        return jsonify({'message': message}), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -28,6 +28,8 @@ def init_db():
                 telefone VARCHAR(20),
                 data_nascimento DATE,
                 sexo VARCHAR(10),
+                diagnostico VARCHAR(200),
+                comorbidades TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 INDEX idx_email (email)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -39,6 +41,8 @@ def init_db():
             ("telefone", "VARCHAR(20)"),
             ("data_nascimento", "DATE"),
             ("sexo", "VARCHAR(10)"),
+            ("diagnostico", "VARCHAR(200)"),
+            ("comorbidades", "TEXT"),
             ("created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ]
         

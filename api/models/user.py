@@ -3,7 +3,7 @@ from api.db import get_connection
 
 class User:
     @staticmethod
-    def create(email, password, nome=None, telefone=None, data_nascimento=None, sexo=None):
+    def create(email, password, nome=None, telefone=None, data_nascimento=None, sexo=None, diagnostico=None, comorbidades=None):
         """Cria um novo usuário no banco"""
         # Hash da senha
         password_hash = bcrypt.hashpw(
@@ -16,10 +16,10 @@ class User:
         
         try:
             sql = """
-                INSERT INTO users (email, password_hash, nome, telefone, data_nascimento, sexo)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO users (email, password_hash, nome, telefone, data_nascimento, sexo, diagnostico, comorbidades)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(sql, (email, password_hash, nome, telefone, data_nascimento, sexo))
+            cursor.execute(sql, (email, password_hash, nome, telefone, data_nascimento, sexo, diagnostico, comorbidades))
             conn.commit()
             
             return cursor.lastrowid
@@ -67,7 +67,7 @@ class User:
         )
     
     @staticmethod
-    def update(user_id, nome=None, telefone=None, data_nascimento=None, sexo=None):
+    def update(user_id, nome=None, telefone=None, data_nascimento=None, sexo=None, diagnostico=None, comorbidades=None):
         """Atualiza dados do usuário"""
         conn = get_connection()
         cursor = conn.cursor()
@@ -93,6 +93,14 @@ class User:
                 updates.append("sexo = %s")
                 values.append(sexo)
             
+            if diagnostico is not None:
+                updates.append("diagnostico = %s")
+                values.append(diagnostico)
+            
+            if comorbidades is not None:
+                updates.append("comorbidades = %s")
+                values.append(comorbidades)
+            
             if not updates:
                 return True  # Nada para atualizar
             
@@ -102,6 +110,42 @@ class User:
             conn.commit()
             
             return True
+            
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def change_password(user_id, old_password, new_password):
+        """Altera a senha do usuário"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Busca usuário
+            sql = "SELECT password_hash FROM users WHERE id = %s"
+            cursor.execute(sql, (user_id,))
+            user = cursor.fetchone()
+            
+            if not user:
+                return False, "Usuário não encontrado"
+            
+            # Verifica senha antiga
+            if not User.check_password(old_password, user['password_hash']):
+                return False, "Senha atual incorreta"
+            
+            # Hash da nova senha
+            new_password_hash = bcrypt.hashpw(
+                new_password.encode('utf-8'),
+                bcrypt.gensalt()
+            ).decode('utf-8')
+            
+            # Atualiza senha
+            sql = "UPDATE users SET password_hash = %s WHERE id = %s"
+            cursor.execute(sql, (new_password_hash, user_id))
+            conn.commit()
+            
+            return True, "Senha alterada com sucesso"
             
         finally:
             cursor.close()
