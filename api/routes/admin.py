@@ -25,7 +25,7 @@ def get_current_user():
         user_id = request.user_id
         
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
         
         cursor.execute('''
             SELECT id, nome, email, telefone, data_nascimento, sexo, 
@@ -65,7 +65,7 @@ def get_all_users():
     """Lista todos os usuários (apenas admin)"""
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
         
         # Busca opcional por nome ou email
         search = request.args.get('search', '')
@@ -113,7 +113,7 @@ def get_user_details(user_id):
     """Retorna detalhes de um usuário específico (apenas admin)"""
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
         
         cursor.execute('''
             SELECT id, nome, email, telefone, data_nascimento, sexo,
@@ -194,7 +194,7 @@ def export_user_report(user_id):
     """Exporta relatório de dados do usuário em PDF (apenas admin)"""
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
         
         # Busca dados do usuário
         cursor.execute('''

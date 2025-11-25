@@ -49,7 +49,7 @@ def admin_required(f):
         # Verifica se o usuário é admin
         try:
             conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor()
             
             cursor.execute('SELECT is_admin FROM users WHERE id = %s', (user_id,))
             user = cursor.fetchone()
