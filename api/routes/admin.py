@@ -223,10 +223,10 @@ def get_user_pain_records(user_id):
         
         # Busca registros de dor
         cursor.execute('''
-            SELECT intensidade, descricao, body_parts, data_registro
+            SELECT intensity, description, body_parts, timestamp
             FROM pain_records
             WHERE user_id = %s
-            ORDER BY data_registro DESC
+            ORDER BY timestamp DESC
             LIMIT %s
         ''', (user_id, limit))
         
@@ -234,16 +234,27 @@ def get_user_pain_records(user_id):
         cursor.close()
         conn.close()
         
-        # Formata datas
+        # Normaliza nomes das colunas para o frontend
+        normalized_records = []
         for record in records:
-            if record.get('data_registro'):
-                if hasattr(record['data_registro'], 'strftime'):
-                    record['data_registro'] = record['data_registro'].strftime('%Y-%m-%d %H:%M:%S')
+            normalized = {
+                'intensidade': record.get('intensity', 0),
+                'descricao': record.get('description', ''),
+                'body_parts': record.get('body_parts', ''),
+                'data_registro': None
+            }
+            
+            # Formata timestamp
+            if record.get('timestamp'):
+                if hasattr(record['timestamp'], 'strftime'):
+                    normalized['data_registro'] = record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')
                 else:
-                    data_str = str(record['data_registro'])
-                    record['data_registro'] = None if data_str.startswith('0000-00-00') else data_str
+                    data_str = str(record['timestamp'])
+                    normalized['data_registro'] = None if data_str.startswith('0000-00-00') else data_str
+            
+            normalized_records.append(normalized)
         
-        return jsonify({'records': records}), 200
+        return jsonify({'records': normalized_records}), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -274,11 +285,11 @@ def export_user_report(user_id):
         
         # Busca registros de dor dos últimos 90 dias
         cursor.execute('''
-            SELECT intensidade, descricao, body_parts, data_registro
+            SELECT intensity, description, body_parts, timestamp
             FROM pain_records
             WHERE user_id = %s 
-            AND data_registro >= DATE_SUB(NOW(), INTERVAL 90 DAY)
-            ORDER BY data_registro DESC
+            AND timestamp >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+            ORDER BY timestamp DESC
         ''', (user_id,))
         
         pain_records = cursor.fetchall()
@@ -349,10 +360,18 @@ def export_user_report(user_id):
         if pain_records:
             pain_data = [['Data', 'Intensidade', 'Descrição']]
             for record in pain_records[:50]:  # Limita a 50 registros mais recentes
+                # Formata timestamp
+                timestamp_str = 'N/A'
+                if record.get('timestamp'):
+                    if hasattr(record['timestamp'], 'strftime'):
+                        timestamp_str = record['timestamp'].strftime('%d/%m/%Y %H:%M')
+                    else:
+                        timestamp_str = str(record['timestamp'])
+                
                 pain_data.append([
-                    record['data_registro'].strftime('%d/%m/%Y %H:%M'),
-                    str(record['intensidade']),
-                    record['descricao'][:50] + '...' if record['descricao'] and len(record['descricao']) > 50 else (record['descricao'] or 'Sem descrição')
+                    timestamp_str,
+                    str(record.get('intensity', 0)),
+                    (record.get('description') or 'Sem descrição')[:50] + '...' if record.get('description') and len(record.get('description', '')) > 50 else (record.get('description') or 'Sem descrição')
                 ])
             
             pain_table = Table(pain_data, colWidths=[1.5*inch, 1*inch, 3.5*inch])
