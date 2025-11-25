@@ -29,7 +29,7 @@ def get_current_user():
         
         cursor.execute('''
             SELECT id, nome, email, telefone, data_nascimento, sexo, 
-                   data_diagnostico, comorbidades, created_at, is_admin
+                   diagnostico, comorbidades, created_at, is_admin
             FROM users 
             WHERE id = %s
         ''', (user_id,))
@@ -46,8 +46,8 @@ def get_current_user():
             user['data_nascimento'] = user['data_nascimento'].strftime('%Y-%m-%d')
         
         # Formata data de diagnóstico
-        if user['data_diagnostico']:
-            user['data_diagnostico'] = user['data_diagnostico'].strftime('%Y-%m-%d')
+        if user.get('diagnostico'):
+            user['diagnostico'] = user['diagnostico']
         
         # Formata created_at
         if user['created_at']:
@@ -73,7 +73,7 @@ def get_all_users():
         if search:
             query = '''
                 SELECT id, nome, email, telefone, data_nascimento, sexo,
-                       data_diagnostico, comorbidades, created_at, is_admin
+                       diagnostico, comorbidades, created_at, is_admin
                 FROM users 
                 WHERE nome LIKE %s OR email LIKE %s
                 ORDER BY created_at DESC
@@ -82,7 +82,7 @@ def get_all_users():
         else:
             query = '''
                 SELECT id, nome, email, telefone, data_nascimento, sexo,
-                       data_diagnostico, comorbidades, created_at, is_admin
+                       diagnostico, comorbidades, created_at, is_admin
                 FROM users 
                 ORDER BY created_at DESC
             '''
@@ -94,11 +94,11 @@ def get_all_users():
         
         # Formata datas
         for user in users:
-            if user['data_nascimento']:
+            if user.get('data_nascimento'):
                 user['data_nascimento'] = user['data_nascimento'].strftime('%Y-%m-%d')
-            if user['data_diagnostico']:
-                user['data_diagnostico'] = user['data_diagnostico'].strftime('%Y-%m-%d')
-            if user['created_at']:
+            if user.get('diagnostico'):
+                user['diagnostico'] = user['diagnostico']
+            if user.get('created_at'):
                 user['created_at'] = user['created_at'].strftime('%Y-%m-%d %H:%M:%S')
         
         return jsonify({'users': users}), 200
@@ -117,7 +117,7 @@ def get_user_details(user_id):
         
         cursor.execute('''
             SELECT id, nome, email, telefone, data_nascimento, sexo,
-                   data_diagnostico, comorbidades, created_at, is_admin
+                   diagnostico, comorbidades, created_at, is_admin
             FROM users 
             WHERE id = %s
         ''', (user_id,))
@@ -130,11 +130,11 @@ def get_user_details(user_id):
             return jsonify({'error': 'Usuário não encontrado'}), 404
         
         # Formata datas
-        if user['data_nascimento']:
+        if user.get('data_nascimento'):
             user['data_nascimento'] = user['data_nascimento'].strftime('%Y-%m-%d')
-        if user['data_diagnostico']:
-            user['data_diagnostico'] = user['data_diagnostico'].strftime('%Y-%m-%d')
-        if user['created_at']:
+        if user.get('diagnostico'):
+            user['diagnostico'] = user['diagnostico']
+        if user.get('created_at'):
             user['created_at'] = user['created_at'].strftime('%Y-%m-%d %H:%M:%S')
         
         return jsonify({'user': user}), 200
@@ -199,7 +199,7 @@ def export_user_report(user_id):
         # Busca dados do usuário
         cursor.execute('''
             SELECT id, nome, email, telefone, data_nascimento, sexo,
-                   data_diagnostico, comorbidades, created_at
+                   diagnostico, comorbidades, created_at
             FROM users 
             WHERE id = %s
         ''', (user_id,))
@@ -246,10 +246,10 @@ def export_user_report(user_id):
         personal_data = [
             ['Email:', user['email']],
             ['Telefone:', user['telefone'] or 'Não informado'],
-            ['Data de Nascimento:', user['data_nascimento'].strftime('%d/%m/%Y') if user['data_nascimento'] else 'Não informado'],
-            ['Sexo:', user['sexo'] or 'Não informado'],
-            ['Data de Diagnóstico:', user['data_diagnostico'].strftime('%d/%m/%Y') if user['data_diagnostico'] else 'Não informado'],
-            ['Comorbidades:', user['comorbidades'] or 'Nenhuma'],
+            ['Data de Nascimento:', user['data_nascimento'].strftime('%d/%m/%Y') if user.get('data_nascimento') else 'Não informado'],
+            ['Sexo:', user.get('sexo') or 'Não informado'],
+            ['Diagnóstico:', user.get('diagnostico') or 'Não informado'],
+            ['Comorbidades:', user.get('comorbidades') or 'Nenhuma'],
             ['Data de Cadastro:', user['created_at'].strftime('%d/%m/%Y %H:%M') if user['created_at'] else 'Não informado'],
         ]
         
