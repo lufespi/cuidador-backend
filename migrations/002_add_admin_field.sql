@@ -12,7 +12,7 @@ CREATE INDEX idx_users_is_admin ON users(is_admin);
 -- Atualizar administradores específicos (manter e-mails seguros)
 -- NOTA: Atualizar com os e-mails reais dos 3 administradores
 UPDATE users SET is_admin = TRUE WHERE email IN (
-    'admin@cuidador.com',
-    'admin2@cuidador.com',
+    'lufespi1221@gmail.com',
+    'carinasuzanacorrea@gmail.com',
     'admin3@cuidador.com'
 );

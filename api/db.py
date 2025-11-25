@@ -12,6 +12,9 @@ def get_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
+# Alias para compatibilidade com código antigo
+get_db_connection = get_connection
+
 def init_db():
     """Verifica se as tabelas necessárias existem (não faz migrações)"""
     conn = get_connection()
