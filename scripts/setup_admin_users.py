@@ -63,7 +63,13 @@ def show_users_table(users):
     
     for user in users:
         admin_status = "✓ SIM" if user['is_admin'] else "✗ NÃO"
-        created = user['created_at'].strftime('%d/%m/%Y') if user['created_at'] else 'N/A'
+        created_at = user['created_at']
+        if hasattr(created_at, 'strftime'):
+            created = created_at.strftime('%d/%m/%Y')
+        elif created_at:
+            created = str(created_at)[:10]
+        else:
+            created = 'N/A'
         print(f"{user['id']:<5} {user['nome']:<30} {user['email']:<35} {admin_status:<8} {created}")
     
     print()

@@ -137,7 +137,13 @@ def main():
             print(f"{'ID':<5} {'Nome':<30} {'E-mail':<35} {'Cadastro'}")
             print("-" * 78)
             for admin in all_admins:
-                created = admin['created_at'].strftime('%d/%m/%Y') if admin['created_at'] else 'N/A'
+                created_at = admin['created_at']
+                if hasattr(created_at, 'strftime'):
+                    created = created_at.strftime('%d/%m/%Y')
+                elif created_at:
+                    created = str(created_at)[:10]
+                else:
+                    created = 'N/A'
                 print(f"{admin['id']:<5} {admin['nome']:<30} {admin['email']:<35} {created}")
         else:
             print("⚠️  Nenhum administrador configurado no sistema")
