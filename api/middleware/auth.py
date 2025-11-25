@@ -47,21 +47,28 @@ def admin_required(f):
         user_id = payload['user_id']
         
         # Verifica se o usuário é admin
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
         try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
             cursor.execute('SELECT is_admin FROM users WHERE id = %s', (user_id,))
             user = cursor.fetchone()
             
-            if not user or not user.get('is_admin'):
+            cursor.close()
+            conn.close()
+            
+            if not user:
+                return jsonify({'error': 'Usuário não encontrado'}), 404
+            
+            if not user.get('is_admin'):
                 return jsonify({'error': 'Acesso negado. Apenas administradores.'}), 403
             
             # Adiciona user_id ao request
             request.user_id = user_id
             return f(*args, **kwargs)
-        finally:
-            cursor.close()
-            conn.close()
+            
+        except Exception as e:
+            return jsonify({'error': f'Erro ao verificar permissões: {str(e)}'}), 500
     
     return decorated
 
