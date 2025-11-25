@@ -19,7 +19,7 @@ admin_bp = Blueprint('admin', __name__)
 
 @admin_bp.route('/auth/me', methods=['GET'])
 @token_required
-def get_current_user():
+def get_current_user(current_user):
     """Retorna informações do usuário logado, incluindo is_admin"""
     try:
         user_id = request.user_id

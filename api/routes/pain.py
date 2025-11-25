@@ -18,7 +18,7 @@ def serialize_dates(record):
 
 @pain_bp.route('/records', methods=['POST'])
 @token_required
-def create_record():
+def create_record(current_user):
     """Cria um novo registro de dor"""
     data = request.get_json()
     
@@ -51,7 +51,7 @@ def create_record():
 
 @pain_bp.route('/records', methods=['GET'])
 @token_required
-def get_records():
+def get_records(current_user):
     """Lista registros de dor do usuário"""
     try:
         # Parâmetros de filtro
@@ -77,7 +77,7 @@ def get_records():
 
 @pain_bp.route('/records/<int:record_id>', methods=['GET'])
 @token_required
-def get_record(record_id):
+def get_record(current_user, record_id):
     """Busca um registro específico de dor"""
     try:
         record = PainRecord.find_by_id(record_id, request.user_id)
@@ -93,7 +93,7 @@ def get_record(record_id):
 
 @pain_bp.route('/records/<int:record_id>', methods=['DELETE'])
 @token_required
-def delete_record(record_id):
+def delete_record(current_user, record_id):
     """Deleta um registro de dor"""
     try:
         success = PainRecord.delete(record_id, request.user_id)
@@ -109,7 +109,7 @@ def delete_record(record_id):
 
 @pain_bp.route('/records/<int:record_id>', methods=['PUT', 'PATCH'])
 @token_required
-def update_record(record_id):
+def update_record(current_user, record_id):
     """Atualiza um registro de dor"""
     data = request.get_json()
     
