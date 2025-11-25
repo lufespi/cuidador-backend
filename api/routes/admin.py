@@ -204,6 +204,51 @@ def reset_user_password(user_id):
         return jsonify({'error': str(e)}), 500
 
 
+@admin_bp.route('/admin/users/<int:user_id>/pain-records', methods=['GET'])
+@admin_required
+def get_user_pain_records(user_id):
+    """Retorna registros de dor de um usuário (apenas admin)"""
+    try:
+        limit = request.args.get('limit', 10, type=int)
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Verifica se usuário existe
+        cursor.execute('SELECT id FROM users WHERE id = %s', (user_id,))
+        if not cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+        
+        # Busca registros de dor
+        cursor.execute('''
+            SELECT intensidade, descricao, body_parts, data_registro
+            FROM pain_records
+            WHERE user_id = %s
+            ORDER BY data_registro DESC
+            LIMIT %s
+        ''', (user_id, limit))
+        
+        records = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        # Formata datas
+        for record in records:
+            if record.get('data_registro'):
+                if hasattr(record['data_registro'], 'strftime'):
+                    record['data_registro'] = record['data_registro'].strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    data_str = str(record['data_registro'])
+                    record['data_registro'] = None if data_str.startswith('0000-00-00') else data_str
+        
+        return jsonify({'records': records}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @admin_bp.route('/admin/users/<int:user_id>/export', methods=['GET'])
 @admin_required
 def export_user_report(user_id):
