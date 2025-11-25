@@ -42,16 +42,20 @@ def get_current_user():
             return jsonify({'error': 'Usuário não encontrado'}), 404
         
         # Formata data de nascimento
-        if user['data_nascimento']:
-            user['data_nascimento'] = user['data_nascimento'].strftime('%Y-%m-%d')
-        
-        # Formata data de diagnóstico
-        if user.get('diagnostico'):
-            user['diagnostico'] = user['diagnostico']
+        if user.get('data_nascimento'):
+            if hasattr(user['data_nascimento'], 'strftime'):
+                user['data_nascimento'] = user['data_nascimento'].strftime('%Y-%m-%d')
+            else:
+                data_str = str(user['data_nascimento'])
+                user['data_nascimento'] = None if data_str.startswith('0000-00-00') else data_str
         
         # Formata created_at
-        if user['created_at']:
-            user['created_at'] = user['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+        if user.get('created_at'):
+            if hasattr(user['created_at'], 'strftime'):
+                user['created_at'] = user['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                data_str = str(user['created_at'])
+                user['created_at'] = None if data_str.startswith('0000-00-00') else data_str
         
         return jsonify({'user': user}), 200
         
@@ -95,11 +99,17 @@ def get_all_users():
         # Formata datas
         for user in users:
             if user.get('data_nascimento'):
-                user['data_nascimento'] = user['data_nascimento'].strftime('%Y-%m-%d')
-            if user.get('diagnostico'):
-                user['diagnostico'] = user['diagnostico']
+                if hasattr(user['data_nascimento'], 'strftime'):
+                    user['data_nascimento'] = user['data_nascimento'].strftime('%Y-%m-%d')
+                else:
+                    data_str = str(user['data_nascimento'])
+                    user['data_nascimento'] = None if data_str.startswith('0000-00-00') else data_str
             if user.get('created_at'):
-                user['created_at'] = user['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                if hasattr(user['created_at'], 'strftime'):
+                    user['created_at'] = user['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    data_str = str(user['created_at'])
+                    user['created_at'] = None if data_str.startswith('0000-00-00') else data_str
         
         return jsonify({'users': users}), 200
         
@@ -131,11 +141,17 @@ def get_user_details(user_id):
         
         # Formata datas
         if user.get('data_nascimento'):
-            user['data_nascimento'] = user['data_nascimento'].strftime('%Y-%m-%d')
-        if user.get('diagnostico'):
-            user['diagnostico'] = user['diagnostico']
+            if hasattr(user['data_nascimento'], 'strftime'):
+                user['data_nascimento'] = user['data_nascimento'].strftime('%Y-%m-%d')
+            else:
+                data_str = str(user['data_nascimento'])
+                user['data_nascimento'] = None if data_str.startswith('0000-00-00') else data_str
         if user.get('created_at'):
-            user['created_at'] = user['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            if hasattr(user['created_at'], 'strftime'):
+                user['created_at'] = user['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            else:
+                data_str = str(user['created_at'])
+                user['created_at'] = None if data_str.startswith('0000-00-00') else data_str
         
         return jsonify({'user': user}), 200
         
@@ -243,14 +259,29 @@ def export_user_report(user_id):
         
         # Informações pessoais
         elements.append(Paragraph("Dados Pessoais", styles['Heading2']))
+        # Formata datas para exibição
+        data_nascimento_str = 'Não informado'
+        if user.get('data_nascimento'):
+            if hasattr(user['data_nascimento'], 'strftime'):
+                data_nascimento_str = user['data_nascimento'].strftime('%d/%m/%Y')
+            else:
+                data_nascimento_str = str(user['data_nascimento'])
+        
+        created_at_str = 'Não informado'
+        if user.get('created_at'):
+            if hasattr(user['created_at'], 'strftime'):
+                created_at_str = user['created_at'].strftime('%d/%m/%Y %H:%M')
+            else:
+                created_at_str = str(user['created_at'])
+        
         personal_data = [
             ['Email:', user['email']],
-            ['Telefone:', user['telefone'] or 'Não informado'],
-            ['Data de Nascimento:', user['data_nascimento'].strftime('%d/%m/%Y') if user.get('data_nascimento') else 'Não informado'],
+            ['Telefone:', user.get('telefone') or 'Não informado'],
+            ['Data de Nascimento:', data_nascimento_str],
             ['Sexo:', user.get('sexo') or 'Não informado'],
             ['Diagnóstico:', user.get('diagnostico') or 'Não informado'],
             ['Comorbidades:', user.get('comorbidades') or 'Nenhuma'],
-            ['Data de Cadastro:', user['created_at'].strftime('%d/%m/%Y %H:%M') if user['created_at'] else 'Não informado'],
+            ['Data de Cadastro:', created_at_str],
         ]
         
         personal_table = Table(personal_data, colWidths=[2*inch, 4*inch])
