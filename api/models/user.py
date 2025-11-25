@@ -194,8 +194,11 @@ class User:
             # 1. Deleta registros de dor
             cursor.execute("DELETE FROM pain_records WHERE user_id = %s", (user_id,))
             
-            # 2. Deleta lembretes
-            cursor.execute("DELETE FROM reminders WHERE user_id = %s", (user_id,))
+            # 2. Deleta lembretes (tabela ainda não implementada, mas mantendo para quando for criada)
+            try:
+                cursor.execute("DELETE FROM reminders WHERE user_id = %s", (user_id,))
+            except Exception:
+                pass  # Ignora se a tabela ainda não existe
             
             # 3. Deleta práticas realizadas
             cursor.execute("DELETE FROM practice_history WHERE user_id = %s", (user_id,))
