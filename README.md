@@ -1,290 +1,249 @@
-# CuidaDor Backend API
+# 🏥 CuidaDor Backend
 
-Backend em Flask para o aplicativo CuidaDor.
+> Backend da aplicação CuidaDor - Sistema de gerenciamento de cuidados e acompanhamento de saúde.
 
-## 📋 Pré-requisitos
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)](https://flask.palletsprojects.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-orange.svg)](https://www.mysql.com/)
 
-- Python 3.8+
-- MySQL (PythonAnywhere)
+**Versão:** 2.0.0  
+**Stack:** Flask + MySQL + JWT  
+**Deploy:** PythonAnywhere (lufespi.pythonanywhere.com)  
+**Repositório:** https://github.com/lufespi/cuidador-backend
 
-## 🚀 Instalação Local
+---
 
-```bash
-# Criar ambiente virtual
-python -m venv venv
+## 📋 Índice
 
-# Ativar ambiente virtual
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
+- [Visão Geral](#visão-geral)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Instalação](#instalação)
+- [API Endpoints](#api-endpoints)
+- [Migrações](#migrações)
+- [Deploy](#deploy)
+- [Documentação Completa](#documentação-completa)
 
-# Instalar dependências
-pip install -r requirements.txt
+---
 
-# Configurar variáveis de ambiente
-cp .env.example .env
-# Edite o .env com suas configurações
+## 🎯 Visão Geral
 
-# Rodar aplicação
-python api/app.py
+O CuidaDor Backend é uma API RESTful construída com Flask que gerencia:
+
+- ✅ Autenticação de usuários (JWT)
+- ✅ Registro de dor e sintomas
+- ✅ Painel administrativo
+- ✅ Geração de relatórios em PDF
+- ✅ Gestão de múltiplos pacientes
+
+### Features Principais
+
+- 🔐 **Autenticação JWT** - Sistema seguro de tokens
+- 👥 **Multi-tenant** - Suporte para múltiplos usuários/pacientes
+- 📊 **Relatórios PDF** - Exportação de dados históricos
+- 🏥 **Registro Detalhado** - Intensidade, partes do corpo, descrições
+- 🔧 **Admin Panel** - Gestão de usuários e sistema
+- 🗄️ **Migrações Automáticas** - Sistema organizado de versionamento do banco
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+cuidador-backend/
+├── api/                          # Código da aplicação
+│   ├── middleware/               # Autenticação e middlewares
+│   ├── models/                   # Modelos de dados (User, PainRecord)
+│   ├── routes/                   # Endpoints da API
+│   ├── app.py                    # Factory da aplicação Flask
+│   └── db.py                     # Conexão com banco de dados
+│
+├── config/                       # Configurações e variáveis de ambiente
+├── scripts/                      # Scripts utilitários
+│   ├── migrations/              # Migrações SQL organizadas
+│   ├── run_migrations.py        # Executor de migrações
+│   ├── setup_admin_users.py     # Gerenciador de admins
+│   └── reset_database.sql       # Reset completo (homologação)
+│
+├── utils/                        # JWT handler e utilitários
+├── tests/                        # Testes automatizados
+└── IMPLEMENTATION_GUIDE.md       # 📘 Guia completo de implementação
 ```
 
-## 🌐 Deploy no PythonAnywhere
+---
 
-### 1. Upload do Código
+## 🚀 Instalação
+
+### 1. Clone o Repositório
+
 ```bash
-# Via Git
-git clone https://github.com/seu-usuario/cuidador-backend.git
+git clone https://github.com/lufespi/cuidador-backend.git
 cd cuidador-backend
 ```
 
-### 2. Criar Virtualenv
-No console do PythonAnywhere:
+### 2. Crie Ambiente Virtual
+
 ```bash
-mkvirtualenv --python=/usr/bin/python3.10 cuidador-env
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou
+venv\Scripts\activate     # Windows
+```
+
+### 3. Instale Dependências
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configurar WSGI File
-Arquivo: `/var/www/kaueMuller_pythonanywhere_com_wsgi.py`
-```python
-import sys
-import os
+### 4. Configure Ambiente
 
-# Adicionar diretório do projeto ao path
-project_home = '/home/KaueMuller/cuidador-backend'
-if project_home not in sys.path:
-    sys.path.insert(0, project_home)
-
-# Carregar variáveis de ambiente
-from dotenv import load_dotenv
-project_folder = os.path.expanduser(project_home)
-load_dotenv(os.path.join(project_folder, '.env'))
-
-# Importar aplicação
-from api.app import create_app
-application = create_app()
+```bash
+cp .env.example .env
+# Edite o .env com suas configurações
 ```
 
-### 4. Configurar Web App
-- Virtualenv path: `/home/KaueMuller/.virtualenvs/cuidador-env`
-- Source code: `/home/KaueMuller/cuidador-backend`
-- WSGI file: configurado acima
+### 5. Execute Migrações
 
-### 5. Reload
-Clique em "Reload" no dashboard do PythonAnywhere
+```bash
+cd scripts
+python3 run_migrations.py
+```
 
-## 📡 Endpoints da API
+### 6. Inicie o Servidor
+
+```bash
+python api/app.py
+```
+
+---
+
+## 🌐 API Endpoints
 
 ### Autenticação
 
-#### Registrar Usuário
-```http
-POST /api/v1/auth/register
-Content-Type: application/json
+| Método | Endpoint | Descrição | Auth |
+|--------|----------|-----------|------|
+| POST | `/api/v1/auth/register` | Registrar novo usuário | ❌ |
+| POST | `/api/v1/auth/login` | Login e obter token JWT | ❌ |
+| GET | `/api/v1/auth/me` | Obter dados do usuário logado | ✅ |
+| PATCH | `/api/v1/auth/me` | Atualizar perfil do usuário | ✅ |
 
-{
-  "email": "usuario@email.com",
-  "senha": "senha123",
-  "nome": "Nome do Usuário",
-  "telefone": "(11) 99999-9999",
-  "data_nascimento": "1990-01-01",
-  "sexo": "M"
-}
-```
+### Registros de Dor
 
-**Resposta (201):**
-```json
-{
-  "message": "Usuário cadastrado com sucesso",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 1,
-    "email": "usuario@email.com",
-    "nome": "Nome do Usuário",
-    "telefone": "(11) 99999-9999",
-    "data_nascimento": "1990-01-01",
-    "sexo": "M",
-    "created_at": "2025-11-23T10:30:00"
-  }
-}
-```
+| Método | Endpoint | Descrição | Auth |
+|--------|----------|-----------|------|
+| POST | `/api/v1/pain` | Criar novo registro de dor | ✅ |
+| GET | `/api/v1/pain` | Listar registros do usuário | ✅ |
+| GET | `/api/v1/pain/:id` | Obter registro específico | ✅ |
+| PUT | `/api/v1/pain/:id` | Atualizar registro | ✅ |
+| DELETE | `/api/v1/pain/:id` | Deletar registro | ✅ |
 
-#### Login
-```http
-POST /api/v1/auth/login
-Content-Type: application/json
+### Admin (requer `is_admin = true`)
 
-{
-  "email": "usuario@email.com",
-  "senha": "senha123"
-}
-```
-
-**Resposta (200):**
-```json
-{
-  "message": "Login realizado com sucesso",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 1,
-    "email": "usuario@email.com",
-    "nome": "Nome do Usuário"
-  }
-}
-```
-
-### Registros de Dor (Requer Autenticação)
-
-#### Criar Registro
-```http
-POST /api/v1/pain/records
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "body_parts": ["head", "neck", "left_shoulder"],
-  "intensidade": 7,
-  "observacoes": "Dor persistente após atividade física"
-}
-```
-
-**Resposta (201):**
-```json
-{
-  "message": "Registro criado com sucesso",
-  "id": 1
-}
-```
-
-#### Listar Registros
-```http
-GET /api/v1/pain/records
-Authorization: Bearer <token>
-```
-
-**Resposta (200):**
-```json
-[
-  {
-    "id": 1,
-    "user_id": 1,
-    "body_parts": ["head", "neck", "left_shoulder"],
-    "intensidade": 7,
-    "data": "2025-11-23T10:30:00",
-    "observacoes": "Dor persistente após atividade física"
-  }
-]
-```
-
-#### Deletar Registro
-```http
-DELETE /api/v1/pain/records/1
-Authorization: Bearer <token>
-```
-
-**Resposta (200):**
-```json
-{
-  "message": "Registro deletado com sucesso"
-}
-```
+| Método | Endpoint | Descrição | Auth |
+|--------|----------|-----------|------|
+| GET | `/api/v1/admin/users` | Listar todos os usuários | 🔑 Admin |
+| GET | `/api/v1/admin/users/:id` | Detalhes de um usuário | 🔑 Admin |
+| POST | `/api/v1/admin/users/:id/reset-password` | Resetar senha | 🔑 Admin |
+| GET | `/api/v1/admin/users/:id/export` | Exportar PDF do usuário | 🔑 Admin |
 
 ### Health Check
-```http
-GET /health
+
+| Método | Endpoint | Descrição | Auth |
+|--------|----------|-----------|------|
+| GET | `/health` | Status da API | ❌ |
+| GET | `/` | Info da API | ❌ |
+
+---
+
+## 🗄️ Migrações
+
+### Executar Migrações Pendentes
+
+```bash
+cd scripts
+python3 run_migrations.py
 ```
 
-**Resposta (200):**
-```json
-{
-  "status": "ok"
-}
+O script:
+- ✅ Verifica migrações já executadas
+- ✅ Lista migrações pendentes
+- ✅ Solicita confirmação
+- ✅ Executa em ordem sequencial
+- ✅ Registra histórico
+
+### Criar Nova Migração
+
+1. Crie arquivo em `scripts/migrations/`:
+   ```
+   004_nome_descritivo.sql
+   ```
+
+2. Siga o formato padrão (veja exemplos existentes)
+
+3. Execute `python3 run_migrations.py`
+
+---
+
+## 🚀 Deploy (PythonAnywhere)
+
+### Quick Deploy
+
+```bash
+cd ~/cuidador-backend
+git pull origin main
+# Clique em "Reload" na aba Web do PythonAnywhere
 ```
 
-## 🗄️ Estrutura do Banco de Dados
+### Troubleshooting
 
-### Tabela: users
-```sql
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(120) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    nome VARCHAR(100),
-    telefone VARCHAR(20),
-    data_nascimento DATE,
-    sexo VARCHAR(10),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_email (email)
-);
+```bash
+# Ver logs de erro
+tail -n 50 /var/www/lufespi_pythonanywhere_com_error.log
+
+# Testar API
+curl https://lufespi.pythonanywhere.com/health
 ```
 
-### Tabela: pain_records
-```sql
-CREATE TABLE pain_records (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    body_parts JSON NOT NULL,
-    intensidade INT NOT NULL,
-    data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    observacoes TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_id (user_id),
-    INDEX idx_data (data)
-);
-```
+---
+
+## 📘 Documentação Completa
+
+Para guia detalhado de implementação, atualização, troubleshooting e workflows:
+
+👉 **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)**
+
+Inclui:
+- ✅ Primeira instalação passo a passo
+- ✅ Como atualizar código existente
+- ✅ Executar e criar migrações
+- ✅ Gerenciar administradores
+- ✅ Reset do banco de dados
+- ✅ Troubleshooting completo
+- ✅ Workflows comuns
+- ✅ Checklist de deploy
+
+---
 
 ## 🔒 Segurança
 
-- ✅ Senhas armazenadas com hash bcrypt
-- ✅ Autenticação JWT com expiração
-- ✅ CORS configurado para Flutter
-- ✅ Validação de entrada em todos os endpoints
-- ✅ SQL preparado (prevenção de SQL injection)
-- ✅ Tokens com tempo de expiração
+- 🔐 Senhas criptografadas com bcrypt
+- 🎫 Autenticação JWT com expiração
+- 🛡️ Validação de dados em todos os endpoints
+- 🚫 CORS configurado corretamente
+- 🔑 Separação de privilégios (user/admin)
 
-## 🛠️ Tecnologias
-
-- **Flask** - Framework web
-- **PyMySQL** - Driver MySQL
-- **bcrypt** - Hash de senhas
-- **PyJWT** - JSON Web Tokens
-- **python-dotenv** - Variáveis de ambiente
-- **Flask-CORS** - Cross-Origin Resource Sharing
-
-## 📝 Variáveis de Ambiente
-
-Crie um arquivo `.env` baseado no `.env.example`:
-
-```env
-DB_HOST=seu-host-mysql
-DB_USER=seu-usuario
-DB_PASSWORD=sua-senha
-DB_NAME=seu-banco
-JWT_SECRET=chave-secreta-jwt
-JWT_EXPIRATION=86400
-FLASK_ENV=production
-SECRET_KEY=chave-secreta-flask
-```
-
-## 🧪 Testes
-
-```bash
-# Instalar dependências de teste
-pip install pytest pytest-cov
-
-# Rodar testes
-pytest
-
-# Com cobertura
-pytest --cov=api tests/
-```
+---
 
 ## 📞 Suporte
 
-Para problemas ou dúvidas, abra uma issue no repositório.
+**API URL:** https://lufespi.pythonanywhere.com  
+**Health Check:** https://lufespi.pythonanywhere.com/health  
+**Repositório:** https://github.com/lufespi/cuidador-backend
 
-## 📄 Licença
+Para questões técnicas, consulte [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
 
-MIT License
+---
+
+**Última atualização:** 25/11/2025  
+**Versão:** 2.0.0
