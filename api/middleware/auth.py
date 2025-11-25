@@ -20,9 +20,28 @@ def token_required(f):
         if not payload:
             return jsonify({'error': 'Token inválido ou expirado'}), 401
         
-        # Adiciona user_id ao request
-        request.user_id = payload['user_id']
-        return f(*args, **kwargs)
+        user_id = payload['user_id']
+        
+        # Buscar dados do usuário
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute('SELECT id, nome, email, is_admin FROM users WHERE id = %s', (user_id,))
+            current_user = cursor.fetchone()
+            
+            cursor.close()
+            conn.close()
+            
+            if not current_user:
+                return jsonify({'error': 'Usuário não encontrado'}), 404
+            
+            # Adiciona user_id ao request
+            request.user_id = user_id
+            return f(current_user, *args, **kwargs)
+            
+        except Exception as e:
+            return jsonify({'error': f'Erro ao buscar usuário: {str(e)}'}), 500
     
     return decorated
 
@@ -51,21 +70,21 @@ def admin_required(f):
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            cursor.execute('SELECT is_admin FROM users WHERE id = %s', (user_id,))
-            user = cursor.fetchone()
+            cursor.execute('SELECT id, nome, email, is_admin FROM users WHERE id = %s', (user_id,))
+            current_user = cursor.fetchone()
             
             cursor.close()
             conn.close()
             
-            if not user:
+            if not current_user:
                 return jsonify({'error': 'Usuário não encontrado'}), 404
             
-            if not user.get('is_admin'):
+            if not current_user.get('is_admin'):
                 return jsonify({'error': 'Acesso negado. Apenas administradores.'}), 403
             
             # Adiciona user_id ao request
             request.user_id = user_id
-            return f(*args, **kwargs)
+            return f(current_user, *args, **kwargs)
             
         except Exception as e:
             return jsonify({'error': f'Erro ao verificar permissões: {str(e)}'}), 500
