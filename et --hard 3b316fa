@@ -1,0 +1,17 @@
+[33mac1d231[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: script database create reminders
+[33mb513f4a[m feat: reminders backend
+[33m3b316fa[m fix: data record
+[33m95b2769[m fix: removido a obrigatoriedade de indicar os locais da dor
+[33m3706e9e[m feat: user token
+[33m19bdeb2[m fix data model
+[33m533c3fe[m body_parts
+[33m9fe02ff[m body_parts
+[33m3ec4523[m fix: body_regions table
+[33mdb7f532[m feat: region parts register
+[33ma19ba05[m feat: forgot password
+[33mc682604[m feat: change password account settings
+[33me7c1be0[m feat: edit user infos
+[33m643abc7[m fix: birth date error
+[33mb6cab5e[m feat: account details backend
+[33m3f5cfea[m fix: missing tables users
+[33m656bfdd[m feat: initializing project

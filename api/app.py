@@ -4,6 +4,7 @@ from config.settings import Config
 from api.db import init_db
 from api.routes.auth import auth_bp
 from api.routes.pain import pain_bp
+from api.routes.admin import admin_bp
 
 def create_app():
     """Factory para criar a aplicação Flask"""
@@ -14,7 +15,7 @@ def create_app():
     CORS(app, resources={
         r"/api/*": {
             "origins": "*",
-            "methods": ["GET", "POST", "PUT", "DELETE"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
     })
@@ -26,6 +27,7 @@ def create_app():
     # Registra blueprints (rotas)
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(pain_bp, url_prefix='/api/v1/pain')
+    app.register_blueprint(admin_bp, url_prefix='/api/v1')
     
     # Rota de health check
     @app.route('/')
