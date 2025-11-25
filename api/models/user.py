@@ -3,7 +3,7 @@ from api.db import get_connection
 
 class User:
     @staticmethod
-    def create(email, password, nome=None, telefone=None, data_nascimento=None, sexo=None, diagnostico=None, comorbidades=None):
+    def create(email, password, nome=None, telefone=None, data_nascimento=None, sexo=None, diagnostico=None, comorbidades=None, data_share_preference='none'):
         """Cria um novo usuário no banco"""
         # Hash da senha
         password_hash = bcrypt.hashpw(
@@ -16,10 +16,10 @@ class User:
         
         try:
             sql = """
-                INSERT INTO users (email, password_hash, nome, telefone, data_nascimento, sexo, diagnostico, comorbidades)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO users (email, password_hash, nome, telefone, data_nascimento, sexo, diagnostico, comorbidades, data_share_preference)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(sql, (email, password_hash, nome, telefone, data_nascimento, sexo, diagnostico, comorbidades))
+            cursor.execute(sql, (email, password_hash, nome, telefone, data_nascimento, sexo, diagnostico, comorbidades, data_share_preference))
             conn.commit()
             
             return cursor.lastrowid
@@ -67,7 +67,7 @@ class User:
         )
     
     @staticmethod
-    def update(user_id, nome=None, telefone=None, data_nascimento=None, sexo=None, diagnostico=None, comorbidades=None):
+    def update(user_id, nome=None, telefone=None, data_nascimento=None, sexo=None, diagnostico=None, comorbidades=None, data_share_preference=None):
         """Atualiza dados do usuário"""
         conn = get_connection()
         cursor = conn.cursor()
@@ -100,6 +100,10 @@ class User:
             if comorbidades is not None:
                 updates.append("comorbidades = %s")
                 values.append(comorbidades)
+            
+            if data_share_preference is not None:
+                updates.append("data_share_preference = %s")
+                values.append(data_share_preference)
             
             if not updates:
                 return True  # Nada para atualizar

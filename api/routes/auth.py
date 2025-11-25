@@ -174,7 +174,8 @@ def update_profile():
             data_nascimento=data.get('data_nascimento'),
             sexo=data.get('sexo'),
             diagnostico=data.get('diagnostico'),
-            comorbidades=data.get('comorbidades')
+            comorbidades=data.get('comorbidades'),
+            data_share_preference=data.get('data_share_preference')
         )
         
         # Busca usuário atualizado
