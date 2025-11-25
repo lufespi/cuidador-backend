@@ -65,7 +65,7 @@ def get_current_user():
 
 @admin_bp.route('/admin/users', methods=['GET'])
 @admin_required
-def get_all_users():
+def get_all_users(current_user):
     """Lista todos os usuários (apenas admin)"""
     try:
         conn = get_db_connection()
@@ -119,7 +119,7 @@ def get_all_users():
 
 @admin_bp.route('/admin/users/<int:user_id>', methods=['GET'])
 @admin_required
-def get_user_details(user_id):
+def get_user_details(current_user, user_id):
     """Retorna detalhes de um usuário específico (apenas admin)"""
     try:
         conn = get_db_connection()
@@ -161,7 +161,7 @@ def get_user_details(user_id):
 
 @admin_bp.route('/admin/users/<int:user_id>/password', methods=['PUT'])
 @admin_required
-def reset_user_password(user_id):
+def reset_user_password(current_user, user_id):
     """Redefine a senha de um usuário (apenas admin)"""
     try:
         data = request.get_json()
@@ -206,7 +206,7 @@ def reset_user_password(user_id):
 
 @admin_bp.route('/admin/users/<int:user_id>/pain-records', methods=['GET'])
 @admin_required
-def get_user_pain_records(user_id):
+def get_user_pain_records(current_user, user_id):
     """Retorna registros de dor de um usuário (apenas admin)"""
     try:
         limit = request.args.get('limit', 10, type=int)
@@ -262,7 +262,7 @@ def get_user_pain_records(user_id):
 
 @admin_bp.route('/admin/users/<int:user_id>/export', methods=['GET'])
 @admin_required
-def export_user_report(user_id):
+def export_user_report(current_user, user_id):
     """Exporta relatório de dados do usuário em PDF (apenas admin)"""
     try:
         conn = get_db_connection()
