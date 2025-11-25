@@ -182,3 +182,38 @@ class User:
         finally:
             cursor.close()
             conn.close()
+
+    @staticmethod
+    def delete(user_id):
+        """Deleta usuário e todos os seus dados relacionados do banco"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Deleta registros relacionados em cascata
+            # 1. Deleta registros de dor
+            cursor.execute("DELETE FROM pain_records WHERE user_id = %s", (user_id,))
+            
+            # 2. Deleta lembretes
+            cursor.execute("DELETE FROM reminders WHERE user_id = %s", (user_id,))
+            
+            # 3. Deleta práticas realizadas
+            cursor.execute("DELETE FROM practice_history WHERE user_id = %s", (user_id,))
+            
+            # 4. Deleta feedback
+            cursor.execute("DELETE FROM feedback WHERE user_id = %s", (user_id,))
+            
+            # 5. Por fim, deleta o usuário
+            cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+            
+            conn.commit()
+            
+            return True, "Conta excluída com sucesso"
+            
+        except Exception as e:
+            conn.rollback()
+            return False, f"Erro ao excluir conta: {str(e)}"
+            
+        finally:
+            cursor.close()
+            conn.close()

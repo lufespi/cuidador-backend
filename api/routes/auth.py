@@ -266,3 +266,44 @@ def reset_password():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@auth_bp.route('/delete-account', methods=['DELETE'])
+def delete_account():
+    """Deleta a conta do usuário e todos os seus dados"""
+    from utils.decorators import token_required
+    from functools import wraps
+    
+    # Aplica o decorator manualmente para obter o current_user
+    @token_required
+    def _delete_account_handler(current_user):
+        data = request.get_json() or {}
+        
+        # Solicita confirmação com senha para segurança
+        senha = data.get('senha')
+        
+        if not senha:
+            return jsonify({'error': 'Senha é obrigatória para confirmar a exclusão'}), 400
+        
+        try:
+            # Busca usuário
+            user = User.find_by_id(current_user)
+            
+            if not user:
+                return jsonify({'error': 'Usuário não encontrado'}), 404
+            
+            # Verifica senha
+            if not User.check_password(senha, user['password_hash']):
+                return jsonify({'error': 'Senha incorreta'}), 401
+            
+            # Deleta conta e todos os dados
+            success, message = User.delete(current_user)
+            
+            if not success:
+                return jsonify({'error': message}), 500
+            
+            return jsonify({'message': message}), 200
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    return _delete_account_handler()
