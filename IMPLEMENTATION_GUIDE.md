@@ -257,7 +257,31 @@ SELECT * FROM migration_history ORDER BY executed_at DESC;
 
 ## 👥 Gerenciar Administradores
 
-### Listar Usuários e Definir Admins
+### Configurar Administradores Padrão do Sistema
+
+Para vincular os 3 administradores principais (lufespi, kaue, carina):
+
+```bash
+cd ~/cuidador-backend/scripts
+python3 set_admins.py
+```
+
+O script irá:
+- ✅ Verificar se os usuários existem (precisam ter conta criada)
+- ✅ Promover automaticamente para administrador
+- ✅ Mostrar lista final de todos os admins
+
+**Ou via SQL direto:**
+```bash
+mysql -h lufespi.mysql.pythonanywhere-services.com \
+      -u lufespi \
+      -p \
+      lufespi$cuidador_homolog_db < scripts/set_admins.sql
+```
+
+### Gerenciar Outros Administradores (Menu Interativo)
+
+Para adicionar/remover outros usuários como admin:
 
 ```bash
 cd ~/cuidador-backend/scripts
