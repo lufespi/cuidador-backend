@@ -190,7 +190,7 @@ def reset_user_password(user_id):
         # Atualiza senha
         cursor.execute('''
             UPDATE users 
-            SET password_hash = %s, updated_at = NOW()
+            SET password_hash = %s
             WHERE id = %s
         ''', (hashed_password, user_id))
         
