@@ -5,10 +5,10 @@ load_dotenv()
 
 class Config:
     # Database
-    DB_HOST = os.getenv('DB_HOST', 'KaueMuller.mysql.pythonanywhere-services.com')
-    DB_USER = os.getenv('DB_USER', 'KaueMuller')
-    DB_PASSWORD = os.getenv('DB_PASSWORD', 'ESquiva09')
-    DB_NAME = os.getenv('DB_NAME', 'KaueMuller$default')
+    DB_HOST = os.getenv('DB_HOST', 'lufespi.mysql.pythonanywhere-services.com')
+    DB_USER = os.getenv('DB_USER', 'lufespi')
+    DB_PASSWORD = os.getenv('DB_PASSWORD', 'mZHr$hSi3ebB{3Px')
+    DB_NAME = os.getenv('DB_NAME', 'lufespi$cuidador_homolog_db')
     
     # JWT
     JWT_SECRET = os.getenv('JWT_SECRET', 'dev-jwt-secret')

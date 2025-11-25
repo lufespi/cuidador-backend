@@ -75,10 +75,10 @@ cuidador-backend/
 
 ```bash
 cd ~
-mysqldump -h KaueMuller.mysql.pythonanywhere-services.com \
-          -u KaueMuller \
+mysqldump -h lufespi.mysql.pythonanywhere-services.com \
+          -u lufespi \
           -p \
-          KaueMuller$cuidador > backup_$(date +%Y%m%d_%H%M%S).sql
+          lufespi$cuidador_homolog_db > backup_$(date +%Y%m%d_%H%M%S).sql
 ```
 
 ### Passo 2: Atualizar Código

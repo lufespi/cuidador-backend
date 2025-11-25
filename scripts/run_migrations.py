@@ -9,10 +9,10 @@ from pathlib import Path
 
 # Configurações do banco de dados
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'KaueMuller.mysql.pythonanywhere-services.com'),
-    'user': os.getenv('DB_USER', 'KaueMuller'),
-    'password': os.getenv('DB_PASSWORD', ''),
-    'database': os.getenv('DB_NAME', 'KaueMuller$cuidador'),
+    'host': os.getenv('DB_HOST', 'lufespi.mysql.pythonanywhere-services.com'),
+    'user': os.getenv('DB_USER', 'lufespi'),
+    'password': os.getenv('DB_PASSWORD', 'mZHr$hSi3ebB{3Px'),
+    'database': os.getenv('DB_NAME', 'lufespi$cuidador_homolog_db'),
     'charset': 'utf8mb4',
     'cursorclass': pymysql.cursors.DictCursor
 }

@@ -106,10 +106,10 @@ nano .env
 
 Configurar:
 ```env
-DB_HOST=KaueMuller.mysql.pythonanywhere-services.com
-DB_USER=KaueMuller
+DB_HOST=lufespi.mysql.pythonanywhere-services.com
+DB_USER=lufespi
 DB_PASSWORD=sua_senha_aqui
-DB_NAME=KaueMuller$cuidador
+DB_NAME=lufespi$cuidador_homolog_db
 
 JWT_SECRET_KEY=sua_chave_secreta_aqui
 FLASK_ENV=production
@@ -321,10 +321,10 @@ UPDATE users SET is_admin = FALSE WHERE id = 5;
 
 1. Acesse MySQL:
    ```bash
-   mysql -h KaueMuller.mysql.pythonanywhere-services.com \
-         -u KaueMuller \
+   mysql -h lufespi.mysql.pythonanywhere-services.com \
+         -u lufespi \
          -p \
-         KaueMuller$cuidador
+         lufespi$cuidador_homolog_db
    ```
 
 2. Execute o script de reset:
@@ -437,7 +437,7 @@ tail -n 100 /var/www/lufespi_pythonanywhere_com_error.log
 mysql -h ... -u ... -p -e "SELECT * FROM migration_history"
 
 # Se necessário, reverter manualmente:
-mysql -h ... -u ... -p KaueMuller$cuidador
+mysql -h ... -u ... -p lufespi$cuidador_homolog_db
 # Executar comandos inversos (DROP COLUMN, etc)
 
 # Corrigir arquivo de migração e executar novamente
@@ -546,7 +546,7 @@ cd ~/cuidador-backend && git pull && python3 scripts/run_migrations.py
 tail -n 50 /var/www/lufespi_pythonanywhere_com_error.log
 
 # Listar admins
-mysql -h ... -u ... -p -e "SELECT id, nome, email FROM KaueMuller\$cuidador.users WHERE is_admin = TRUE"
+mysql -h ... -u ... -p -e "SELECT id, nome, email FROM lufespi\$cuidador_homolog_db.users WHERE is_admin = TRUE"
 
 # Testar API
 curl https://lufespi.pythonanywhere.com/health && echo "✅ API OK"
