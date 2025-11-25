@@ -33,7 +33,7 @@ def check_users_exist(conn):
     with conn.cursor() as cursor:
         placeholders = ','.join(['%s'] * len(ADMIN_EMAILS))
         query = f"""
-            SELECT id, nome, email, is_admin, status 
+            SELECT id, nome, email, is_admin
             FROM users 
             WHERE email IN ({placeholders})
             ORDER BY email
@@ -54,7 +54,7 @@ def get_all_admins(conn):
     """Lista todos os administradores"""
     with conn.cursor() as cursor:
         cursor.execute("""
-            SELECT id, nome, email, status, created_at 
+            SELECT id, nome, email, created_at 
             FROM users 
             WHERE is_admin = TRUE 
             ORDER BY email
@@ -87,13 +87,13 @@ def main():
         
         # Mostrar usuários encontrados
         print(f"✅ {len(existing_users)} usuário(s) encontrado(s):\n")
-        print(f"{'ID':<5} {'Nome':<30} {'E-mail':<35} {'Admin':<8} {'Status'}")
-        print("-" * 85)
+        print(f"{'ID':<5} {'Nome':<30} {'E-mail':<35} {'Admin'}")
+        print("-" * 75)
         
         emails_to_promote = []
         for user in existing_users:
             admin_status = "✓ SIM" if user['is_admin'] else "✗ NÃO"
-            print(f"{user['id']:<5} {user['nome']:<30} {user['email']:<35} {admin_status:<8} {user['status']}")
+            print(f"{user['id']:<5} {user['nome']:<30} {user['email']:<35} {admin_status}")
             
             if not user['is_admin']:
                 emails_to_promote.append(user['email'])
@@ -134,10 +134,11 @@ def main():
         
         if all_admins:
             print(f"Total: {len(all_admins)} administrador(es)\n")
-            print(f"{'ID':<5} {'Nome':<30} {'E-mail':<35} {'Status'}")
+            print(f"{'ID':<5} {'Nome':<30} {'E-mail':<35} {'Cadastro'}")
             print("-" * 78)
             for admin in all_admins:
-                print(f"{admin['id']:<5} {admin['nome']:<30} {admin['email']:<35} {admin['status']}")
+                created = admin['created_at'].strftime('%d/%m/%Y') if admin['created_at'] else 'N/A'
+                print(f"{admin['id']:<5} {admin['nome']:<30} {admin['email']:<35} {created}")
         else:
             print("⚠️  Nenhum administrador configurado no sistema")
         
