@@ -83,7 +83,13 @@ def main():
                 print("   " + "-" * 85)
                 for user in users:
                     admin_status = "✓ SIM" if user[3] else "✗ NÃO"
-                    created = user[4].strftime('%d/%m/%Y') if user[4] else 'N/A'
+                    created_at = user[4]
+                    if hasattr(created_at, 'strftime'):
+                        created = created_at.strftime('%d/%m/%Y')
+                    elif created_at:
+                        created = str(created_at)[:10]
+                    else:
+                        created = 'N/A'
                     print(f"   {user[0]:<5} {user[1]:<30} {user[2]:<35} {admin_status:<8} {created}")
             else:
                 print("   ⚠️  Nenhum usuário cadastrado")
