@@ -200,13 +200,10 @@ class User:
             except Exception:
                 pass  # Ignora se a tabela ainda não existe
             
-            # 3. Deleta práticas realizadas
-            cursor.execute("DELETE FROM practice_history WHERE user_id = %s", (user_id,))
-            
-            # 4. Deleta feedback
+            # 3. Deleta feedback
             cursor.execute("DELETE FROM feedback WHERE user_id = %s", (user_id,))
             
-            # 5. Por fim, deleta o usuário
+            # 4. Por fim, deleta o usuário
             cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
             
             conn.commit()
