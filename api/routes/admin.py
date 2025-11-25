@@ -209,8 +209,6 @@ def reset_user_password(current_user, user_id):
 def get_user_pain_records(current_user, user_id):
     """Retorna registros de dor de um usuário (apenas admin)"""
     try:
-        limit = request.args.get('limit', 10, type=int)
-        
         conn = get_db_connection()
         cursor = conn.cursor()
         
@@ -221,14 +219,13 @@ def get_user_pain_records(current_user, user_id):
             conn.close()
             return jsonify({'error': 'Usuário não encontrado'}), 404
         
-        # Busca registros de dor
+        # Busca todos os registros de dor (sem limite)
         cursor.execute('''
             SELECT intensity, description, body_parts, timestamp
             FROM pain_records
             WHERE user_id = %s
             ORDER BY timestamp DESC
-            LIMIT %s
-        ''', (user_id, limit))
+        ''', (user_id,))
         
         records = cursor.fetchall()
         cursor.close()
