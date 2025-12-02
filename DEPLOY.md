@@ -1,4 +1,4 @@
-# 🚀 Guia de Deploy - PythonAnywhere
+# 🚀 Guia de Deploy - PythonAnywhere!
 
 Este guia detalha como fazer deploy do backend CuidaDor no PythonAnywhere.
 
