@@ -198,7 +198,7 @@ class User:
             # 1. Deleta registros de dor
             cursor.execute("DELETE FROM pain_records WHERE user_id = %s", (user_id,))
             
-            # 2. Deleta lembretes (tabela ainda não implementada, mas mantendo para quando for criada)
+            # 2. Deleta lembretes
             try:
                 cursor.execute("DELETE FROM reminders WHERE user_id = %s", (user_id,))
             except Exception:
@@ -217,6 +217,27 @@ class User:
         except Exception as e:
             conn.rollback()
             return False, f"Erro ao excluir conta: {str(e)}"
+            
+        finally:
+            cursor.close()
+            conn.close()
+    
+    @staticmethod
+    def update_notification_preferences(user_id, preferences):
+        """Atualiza as preferências de notificação do usuário"""
+        import json
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Converte dict para JSON string
+            preferences_json = json.dumps(preferences)
+            
+            sql = "UPDATE users SET notification_preferences = %s WHERE id = %s"
+            cursor.execute(sql, (preferences_json, user_id))
+            conn.commit()
+            
+            return cursor.rowcount > 0
             
         finally:
             cursor.close()

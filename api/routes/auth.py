@@ -308,3 +308,81 @@ def delete_account():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@auth_bp.route('/notification-preferences', methods=['GET'])
+def get_notification_preferences():
+    """Retorna as preferências de notificação do usuário"""
+    from api.middleware.auth import require_auth
+    from flask import g
+    import json
+    
+    # Verifica autenticação
+    auth_result = require_auth()
+    if auth_result:
+        return auth_result
+    
+    try:
+        user = User.find_by_id(g.user_id)
+        
+        if not user:
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+        
+        # Retorna as preferências ou valores padrão
+        preferences = user.get('notification_preferences')
+        
+        if preferences:
+            # Se estiver armazenado como string JSON, converte
+            if isinstance(preferences, str):
+                preferences = json.loads(preferences)
+        else:
+            # Valores padrão
+            preferences = {
+                'enabled': True,
+                'types': {
+                    'exercise': {'enabled': True, 'time': '08:00'},
+                    'medication': {'enabled': True, 'time': '12:00'},
+                    'appointment': {'enabled': True, 'time': '14:00'},
+                    'practice': {'enabled': True, 'time': '18:00'},
+                    'hydration': {'enabled': True, 'time': '10:00'},
+                    'diet': {'enabled': True, 'time': '12:00'}
+                }
+            }
+        
+        return jsonify(preferences), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@auth_bp.route('/notification-preferences', methods=['PUT'])
+def update_notification_preferences():
+    """Atualiza as preferências de notificação do usuário"""
+    from api.middleware.auth import require_auth
+    from flask import g
+    import json
+    
+    # Verifica autenticação
+    auth_result = require_auth()
+    if auth_result:
+        return auth_result
+    
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({'error': 'Dados de preferências são obrigatórios'}), 400
+    
+    try:
+        # Atualiza as preferências
+        success = User.update_notification_preferences(g.user_id, data)
+        
+        if success:
+            return jsonify({
+                'message': 'Preferências de notificação atualizadas',
+                'preferences': data
+            }), 200
+        else:
+            return jsonify({'error': 'Erro ao atualizar preferências'}), 500
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
